@@ -5,7 +5,7 @@ const app = new Express();
 app.use(Express.json());
 
 app.get('/_healthcheck', (req, res) => {
-    res.send('OK');
+  res.send('OK');
 });
 
 export default app;
