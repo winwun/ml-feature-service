@@ -1,5 +1,5 @@
 // eslint-disable-next-line import/no-mutable-exports
-const featureList = [
+export const featureList = [
   { featureName: 'someFeature', email: 'someEmail@email.com', enable: true },
 ];
 

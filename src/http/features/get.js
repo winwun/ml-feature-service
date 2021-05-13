@@ -6,11 +6,11 @@ export default async function getFeature(req, res) {
   const feature = get({ email, featureName });
 
   if (!feature) {
-    res.status(404).send({
+    return res.status(404).send({
       statusCode: 404,
       message: 'NOT_FOUND',
     });
   }
 
-  return res.status(200).send(feature);
+  return res.status(200).send({ canAccess: feature.enable });
 }
