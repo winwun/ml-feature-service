@@ -1,8 +1,8 @@
 import request from 'supertest';
-import app from '../../../app';
 
 describe('Get Feature', () => {
-  function getFeature({ email, featureName }) {
+  async function getFeature({ email, featureName }) {
+    const app = (await import('../../../app')).default;
     const getRequest = request(app)
       .get('/api/feature')
       .set('Accept', 'application/json');
@@ -10,10 +10,20 @@ describe('Get Feature', () => {
     return getRequest.query({ email, featureName }).send();
   }
 
+  function mockErrorGetFeature() {
+    jest.mock('../../../helpers/featureData', () => ({
+      get: () => {
+        throw new Error('Internal Server Error');
+      },
+    }));
+  }
+
   describe('when there is no match for any feature', () => {
     let response;
 
     beforeAll(async () => {
+      jest.resetModules();
+
       response = await getFeature({
         email: 'someNewEmail@email.com',
         featureName: 'someNewFeature',
@@ -29,6 +39,8 @@ describe('Get Feature', () => {
     let response;
 
     beforeAll(async () => {
+      jest.resetModules();
+
       response = await getFeature({
         email: 'someEmail@email.com',
         featureName: 'someFeature',
@@ -41,6 +53,28 @@ describe('Get Feature', () => {
 
     it('should return canAccess field', () => {
       expect(response.body).toEqual({ canAccess: true });
+    });
+  });
+
+  describe('when something went wrong data retrieval', () => {
+    let response;
+
+    beforeAll(async () => {
+      jest.resetModules();
+
+      mockErrorGetFeature();
+      response = await getFeature({
+        email: 'someEmail@email.com',
+        featureName: 'someFeature',
+      });
+    });
+
+    it('should return 500 when an error occurs', () => {
+      expect(response.status).toEqual(500);
+    });
+
+    it('should error message', () => {
+      expect(response.body.message).toEqual('Internal Server Error');
     });
   });
 });

@@ -1,23 +1,26 @@
 import request from 'supertest';
-import app from '../../../app';
-import { featureList } from '../../../helpers/featureData';
 
 describe('Post Feature', () => {
-  function postFeature({
+  async function postFeature({
     email = 'someDefault@email.com',
     featureName = 'someDefaultFeature',
     enable = false,
   }) {
-    const getRequest = request(app)
+    const app = (await import('../../../app')).default;
+    const postRequest = request(app)
       .post('/api/feature')
       .set('Accept', 'application/json');
 
-    return getRequest.send({ email, featureName, enable });
+    return postRequest.send({ email, featureName, enable });
   }
 
-  beforeAll(() => {
-    jest.resetModules();
-  });
+  function mockErrorPostFeature() {
+    jest.mock('../../../helpers/featureData', () => ({
+      upsert: () => {
+        throw new Error('Internal Server Error');
+      },
+    }));
+  }
 
   describe('when requested feature is not yet on the list', () => {
     let response;
@@ -28,6 +31,8 @@ describe('Post Feature', () => {
     };
 
     beforeAll(async () => {
+      jest.resetModules();
+
       response = await postFeature(expectedFeature);
     });
 
@@ -35,7 +40,9 @@ describe('Post Feature', () => {
       expect(response.status).toEqual(200);
     });
 
-    it('should add data on the list', () => {
+    it('should add data on the list', async () => {
+      const { featureList } = await import('../../../helpers/featureData');
+
       const postedFeature = featureList.find(
         (feature) =>
           feature.featureName === expectedFeature.featureName &&
@@ -55,6 +62,8 @@ describe('Post Feature', () => {
     };
 
     beforeAll(async () => {
+      jest.resetModules();
+
       await postFeature(expectedFeature);
       response = await postFeature(expectedFeature);
     });
@@ -73,6 +82,8 @@ describe('Post Feature', () => {
     };
 
     beforeAll(async () => {
+      jest.resetModules();
+
       response = await postFeature(expectedFeature);
     });
 
@@ -80,13 +91,39 @@ describe('Post Feature', () => {
       expect(response.status).toEqual(200);
     });
 
-    it('should add data on the list', () => {
+    it('should add data on the list', async () => {
+      const { featureList } = await import('../../../helpers/featureData');
       const postedFeature = featureList.find(
         (feature) =>
           feature.featureName === expectedFeature.featureName &&
           feature.email === expectedFeature.email
       );
       expect(expectedFeature).toEqual(postedFeature);
+    });
+  });
+
+  describe('when something went wrong during posting of data', () => {
+    let response;
+
+    const expectedFeature = {
+      email: 'someEmail@email.com',
+      featureName: 'someFeature',
+      enable: false,
+    };
+
+    beforeAll(async () => {
+      jest.resetModules();
+
+      mockErrorPostFeature();
+      response = await postFeature(expectedFeature);
+    });
+
+    it('should return 500 when an error occurs', () => {
+      expect(response.status).toEqual(500);
+    });
+
+    it('should error message', () => {
+      expect(response.body.message).toEqual('Internal Server Error');
     });
   });
 });
