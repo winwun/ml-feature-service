@@ -1,17 +1,13 @@
 import request from 'supertest';
 
 describe('Post Feature', () => {
-  async function postFeature({
-    email = 'someDefault@email.com',
-    featureName = 'someDefaultFeature',
-    enable = false,
-  }) {
+  async function postFeature(body) {
     const app = (await import('../../../app')).default;
     const postRequest = request(app)
       .post('/api/feature')
       .set('Accept', 'application/json');
 
-    return postRequest.send({ email, featureName, enable });
+    return postRequest.send(body);
   }
 
   function mockErrorPostFeature() {
@@ -99,6 +95,101 @@ describe('Post Feature', () => {
           feature.email === expectedFeature.email
       );
       expect(expectedFeature).toEqual(postedFeature);
+    });
+  });
+
+  describe('on validations', () => {
+    describe('when property email requested is in invalid format', () => {
+      let response;
+      const expectedFeature = {
+        email: 'invalidEmail',
+        featureName: 'someNewFeature',
+        enable: true,
+      };
+
+      beforeAll(async () => {
+        jest.resetModules();
+
+        response = await postFeature(expectedFeature);
+      });
+
+      it('should return 400 error', () => {
+        expect(response.status).toEqual(400);
+      });
+
+      it('should return validation error', async () => {
+        expect(response.body).toEqual({ message: 'validation error' });
+      });
+    });
+
+    describe('when property featureName defined is of different type', () => {
+      let response;
+      const expectedFeature = {
+        email: 'someNewEmail@email.com',
+        featureName: 12222,
+        enable: true,
+      };
+
+      beforeAll(async () => {
+        jest.resetModules();
+
+        response = await postFeature(expectedFeature);
+      });
+
+      it('should return 400 error', () => {
+        expect(response.status).toEqual(400);
+      });
+
+      it('should return validation error', async () => {
+        expect(response.body).toEqual({ message: 'validation error' });
+      });
+    });
+
+    describe('when property enable defined is of different type', () => {
+      let response;
+      const expectedFeature = {
+        email: 'someNewEmail@email.com',
+        featureName: 'someNewFeature',
+        enable: 'Truee',
+      };
+
+      beforeAll(async () => {
+        jest.resetModules();
+
+        response = await postFeature(expectedFeature);
+      });
+
+      it('should return 400 error', () => {
+        expect(response.status).toEqual(400);
+      });
+
+      it('should return validation error', async () => {
+        expect(response.body).toEqual({ message: 'validation error' });
+      });
+    });
+
+    describe('when other properties are defined', () => {
+      let response;
+      const expectedFeature = {
+        email: 'someNewEmail@email.com',
+        featureName: 'someNewFeature',
+        enable: true,
+        newProperty: 'hello',
+      };
+
+      beforeAll(async () => {
+        jest.resetModules();
+
+        response = await postFeature(expectedFeature);
+      });
+
+      it('should return 400 error', () => {
+        expect(response.status).toEqual(400);
+      });
+
+      it('should return validation error', async () => {
+        expect(response.body).toEqual({ message: 'validation error' });
+      });
     });
   });
 
