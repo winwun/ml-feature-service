@@ -2,9 +2,9 @@ import Joi from '@hapi/joi';
 import { upsert } from '../../helpers/featureData';
 
 const schema = Joi.object({
-  email: Joi.string().email(),
-  featureName: Joi.string(),
-  enable: Joi.boolean(),
+  email: Joi.string().email().required(),
+  featureName: Joi.string().required(),
+  enable: Joi.boolean().required(),
 });
 
 export default async function postFeature(req, res) {

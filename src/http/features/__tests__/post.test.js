@@ -191,6 +191,25 @@ describe('Post Feature', () => {
         expect(response.body).toEqual({ message: 'validation error' });
       });
     });
+
+    describe('when required fields are not defined', () => {
+      let response;
+      const expectedFeature = {};
+
+      beforeAll(async () => {
+        jest.resetModules();
+
+        response = await postFeature(expectedFeature);
+      });
+
+      it('should return 400 error', () => {
+        expect(response.status).toEqual(400);
+      });
+
+      it('should return validation error', async () => {
+        expect(response.body).toEqual({ message: 'validation error' });
+      });
+    });
   });
 
   describe('when something went wrong during posting of data', () => {

@@ -15,7 +15,7 @@
 
 > yarn start
 
-### Run Lint
+### Run Linting
 
 > yarn lint
 
@@ -58,6 +58,8 @@ curl --location --request GET 'http://localhost:4000/api/feature?email=someEmail
 ### Post Feature
 
 #### Request
+
+`featureName`, `email` and `enable` are required
 
 ```bash
 curl --location --request POST 'http://localhost:4000/api/feature' \
